@@ -1,3 +1,5 @@
+let calorieHistory = [];
+
 const calculateBtn = document.querySelector("#calculate-btn");
 const resultDiv = document.querySelector("#result");
 
@@ -7,7 +9,7 @@ const loadCaloriesByActivity = (activity) => {
     return;
   }
 
-  const url = `https://student-api-proxy.onrender.com/api/calories-burned-by-api-ninjas.p.rapidapi.com/v1/caloriesburned?activity=${encodeURIComponent(activity)}`;
+  const url = `https://student-api-proxy.onrender.com/api/calories-burned-by-api-ninjas.p.rapidapi.com/v1/caloriesburned?activity=${activity}`;
 
   const options = {
     method: "GET",
@@ -29,7 +31,8 @@ const loadCaloriesByActivity = (activity) => {
           return;
         }
 
-        // Just show the first result (simple)
+        calorieHistory.push(data[0]);
+
         resultDiv.innerHTML =
           `<strong>${data[0].name}</strong><br>` +
           `Calories burned per hour: ${data[0].calories_per_hour}`;
