@@ -2,9 +2,12 @@ let calorieHistory = [];
 
 const calculateBtn = document.querySelector("#calculate-btn");
 const resultDiv = document.querySelector("#result");
+const listGroup = document.querySelector(".list-group");
 
-const loadCaloriesByActivity = (activity) => {
-  if (!activity) {
+async function getCalories() {
+  const activity = document.querySelector("#activity-input").value.trim();
+
+  if (activity === "") {
     alert("Please enter an activity");
     return;
   }
@@ -21,31 +24,42 @@ const loadCaloriesByActivity = (activity) => {
 
   resultDiv.innerHTML = "Loading...";
 
-  fetch(url, options)
-    .then((response) =>
-      response.json().then((result) => {
-        const data = result.data || result;
+  try {
+    const response = await fetch(url, options);
+    const json = await response.json();
 
-        if (!data || data.length === 0) {
-          resultDiv.innerHTML = "No results found.";
-          return;
-        }
+    const data = json.data;
 
-        calorieHistory.push(data[0]);
+    if (!data || data.length === 0) {
+      resultDiv.innerHTML = "No results found.";
+      return;
+    }
 
-        resultDiv.innerHTML =
-          `<strong>${data[0].name}</strong><br>` +
-          `Calories burned per hour: ${data[0].calories_per_hour}`;
-      }),
-    )
-    .catch((error) => {
-      console.log(error);
-      resultDiv.innerHTML = "Error loading data.";
-    });
-};
+    calorieHistory.push(data[0]);
 
-calculateBtn.addEventListener("click", (event) => {
+    resultDiv.innerHTML =
+      "<strong>" +
+      data[0].name +
+      "</strong> burns <strong>" +
+      data[0].calories_per_hour +
+      "</strong> calories per hour.";
+
+    listGroup.innerHTML = "";
+    for (let i = 0; i < calorieHistory.length; i++) {
+      listGroup.innerHTML +=
+        "<li class='list-group-item'>" +
+        calorieHistory[i].name +
+        " - " +
+        calorieHistory[i].calories_per_hour +
+        " cal/hr</li>";
+    }
+  } catch (error) {
+    console.log(error);
+    resultDiv.innerHTML = "Error loading data.";
+  }
+}
+
+calculateBtn.addEventListener("click", function (event) {
   event.preventDefault();
-  const activity = document.querySelector("#activity-input").value.trim();
-  loadCaloriesByActivity(activity);
+  getCalories();
 });
