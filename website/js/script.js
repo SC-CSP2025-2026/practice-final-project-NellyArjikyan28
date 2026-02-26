@@ -1,18 +1,11 @@
-let calorieHistory = [];
+const calculateButton = document.querySelector("#calculate-btn");
+const searchInput = document.querySelector("#activity-input");
+const activitiesList = document.querySelector(".list-group");
 
-const calculateBtn = document.querySelector("#calculate-btn");
-const resultDiv = document.querySelector("#result");
-const listGroup = document.querySelector(".list-group");
+const loadActivitiesbySearch = async (searchTerm) => {
+  activitiesList.innerHTML = ""; // clear old results
 
-async function getCalories() {
-  const activity = document.querySelector("#activity-input").value.trim();
-
-  if (activity === "") {
-    alert("Please enter an activity");
-    return;
-  }
-
-  const url = `https://student-api-proxy.onrender.com/api/calories-burned-by-api-ninjas.p.rapidapi.com/v1/caloriesburned?activity=${activity}`;
+  const url = `https://student-api-proxy.onrender.com/api/calories-burned-by-api-ninjas.p.rapidapi.com/v1/caloriesburned?activity=${searchTerm}`;
 
   const options = {
     method: "GET",
@@ -22,44 +15,42 @@ async function getCalories() {
     },
   };
 
-  resultDiv.innerHTML = "Loading...";
+  const response = await fetch(url, options);
+  const result = await response.json();
 
-  try {
-    const response = await fetch(url, options);
-    const json = await response.json();
+  const activities = result.data;
 
-    const data = json.data;
-
-    if (!data || data.length === 0) {
-      resultDiv.innerHTML = "No results found.";
-      return;
-    }
-
-    calorieHistory.push(data[0]);
-
-    resultDiv.innerHTML =
-      "<strong>" +
-      data[0].name +
-      "</strong> burns <strong>" +
-      data[0].calories_per_hour +
-      "</strong> calories per hour.";
-
-    listGroup.innerHTML = "";
-    for (let i = 0; i < calorieHistory.length; i++) {
-      listGroup.innerHTML +=
-        "<li class='list-group-item'>" +
-        calorieHistory[i].name +
-        " - " +
-        calorieHistory[i].calories_per_hour +
-        " cal/hr</li>";
-    }
-  } catch (error) {
-    console.log(error);
-    resultDiv.innerHTML = "Error loading data.";
+  if (!activities || activities.length === 0) {
+    activitiesList.innerHTML =
+      "<li class='list-group-item'>No results found</li>";
+    return;
   }
-}
 
-calculateBtn.addEventListener("click", function (event) {
+  activities.forEach((activity) => {
+    const listItem = `
+      <li class="list-group-item">
+        <strong>${activity.name}</strong><br>
+        Calories burned per hour: ${activity.calories_per_hour}
+      </li>
+    `;
+    activitiesList.insertAdjacentHTML("beforeend", listItem);
+  });
+};
+
+calculateButton.addEventListener("click", (event) => {
   event.preventDefault();
-  getCalories();
+  const searchTerm = searchInput.value.trim();
+  if (searchTerm !== "") {
+    loadActivitiesbySearch(searchTerm);
+  }
+});
+
+searchInput.addEventListener("keyup", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm !== "") {
+      loadActivitiesbySearch(searchTerm);
+    }
+  }
 });
